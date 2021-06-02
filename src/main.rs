@@ -1,3 +1,9 @@
+mod game;
+mod gfx;
+
+use gfx::App;
+
 fn main() {
-    println!("Hello, world!");
+    let app = App::new();
+    app.run();
 }
