@@ -12,9 +12,8 @@ pub use surface::Surface;
 pub use swapchain::Swapchain;
 
 pub struct Vulkan {
-    instance: Arc<Instance>,
-    device: Device,
     surface: Surface,
+    device: Device,
     swapchain: Swapchain,
 }
 
@@ -23,12 +22,15 @@ impl Vulkan {
         let instance = Instance::new(None, &vulkano_win::required_extensions(), None)
             .expect("failed to create Vulkan instance");
 
-        let device = Device::new(&instance);
+        let physical = PhysicalDevice::enumerate(&instance)
+            .next()
+            .expect("no Vulkan physical device available");
+
         let surface = Surface::new(&instance, event_loop);
+        let device = Device::new(physical, &surface);
         let swapchain = Swapchain::new(&device, &surface);
 
         Self {
-            instance,
             surface,
             device,
             swapchain,

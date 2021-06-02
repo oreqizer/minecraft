@@ -2,22 +2,20 @@ use std::sync::Arc;
 use vulkano::device::{Device as VulkanDevice, DeviceExtensions, Features, QueuesIter};
 use vulkano::instance::{Instance, PhysicalDevice};
 
+use crate::gfx::vulkan::Surface;
+
 pub struct Device {
     pub device: Arc<VulkanDevice>,
     pub queues: QueuesIter,
 }
 
 impl Device {
-    pub fn new(instance: &Arc<Instance>) -> Self {
+    pub fn new(physical: PhysicalDevice, surface: &Surface) -> Self {
         const QUEUE_PRIO_DEFAULT: f32 = 0.5;
-
-        let physical = PhysicalDevice::enumerate(&instance)
-            .next()
-            .expect("no Vulkan physical device available");
 
         let queue_family = physical
             .queue_families()
-            .find(|&q| q.supports_graphics())
+            .find(|&q| q.supports_graphics() && surface.surface.is_supported(q).unwrap_or(false))
             .expect("couldn't find a Vulkan graphical queue family");
 
         let device_ext = DeviceExtensions {
