@@ -8,9 +8,11 @@ pub struct App {
 
 impl App {
     pub fn new() -> Self {
+        let vulkan = Vulkan::new();
+
         Self {
-            window: Window::new(),
             vulkan: Vulkan::new(),
+            window: Window::new(&vulkan),
         }
     }
 

@@ -5,8 +5,11 @@
 //! is **replayable** — replaying the sequence provided by the `on_update` callback
 //! always yields the same results.
 
+use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 
+use vulkano_win::VkSurfaceBuild;
+use vulkano::swapchain::Surface;
 use winit::{
     dpi::LogicalSize,
     event::{Event, WindowEvent},
@@ -15,13 +18,13 @@ use winit::{
 };
 
 use crate::game::Input;
-use crate::gfx::events;
+use crate::gfx::{events, Vulkan};
 
 pub struct Window {
     // Core
     event_loop: Option<EventLoop<()>>,
     #[allow(dead_code)]
-    window: WinitWindow,
+    window: Arc<Surface<WinitWindow>>,
     // Callbacks
     on_update: Option<Box<dyn Fn(Duration, &Vec<Input>)>>,
     on_render: Option<Box<dyn Fn()>>,
@@ -33,7 +36,7 @@ pub struct Window {
 }
 
 impl Window {
-    pub fn new() -> Self {
+    pub fn new(vulkan: &Vulkan) -> Self {
         const INIT_WIDTH: u32 = 800;
         const INIT_HEIGHT: u32 = 600;
         const TITLE: &str = "Minecraft";
@@ -45,7 +48,7 @@ impl Window {
                 f64::from(INIT_WIDTH),
                 f64::from(INIT_HEIGHT),
             ))
-            .build(&event_loop)
+            .build_vk_surface(&event_loop, vulkan.instance.clone())
             .unwrap();
 
         Self {
