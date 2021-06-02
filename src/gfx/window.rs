@@ -35,10 +35,6 @@ pub struct Window {
 
 impl Window {
     pub fn new(event_loop: EventLoop<()>) -> Self {
-        const INIT_WIDTH: u32 = 800;
-        const INIT_HEIGHT: u32 = 600;
-        const TITLE: &str = "Minecraft";
-
         Self {
             event_loop: Some(event_loop),
             //
