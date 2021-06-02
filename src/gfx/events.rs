@@ -1,6 +1,11 @@
+//! # Events
+//!
+//! The `events` module is responsible for mapping raw `winit::event` events into a consumable
+//! vector of inputs.
+
 use winit::event::{DeviceEvent, WindowEvent};
 
-use crate::game::input::Input;
+use crate::game::Input;
 
 pub fn from_window(we: WindowEvent) -> Option<Input> {
     match we {

@@ -14,7 +14,7 @@ use winit::{
     window::{Window as WinitWindow, WindowBuilder},
 };
 
-use crate::game::input::Input;
+use crate::game::Input;
 use crate::gfx::events;
 
 pub struct Window {
