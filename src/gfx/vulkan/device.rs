@@ -3,8 +3,8 @@ use vulkano::device::{Device as VulkanDevice, DeviceExtensions, Features, Queues
 use vulkano::instance::{Instance, PhysicalDevice};
 
 pub struct Device {
-    device: Arc<VulkanDevice>,
-    queues: QueuesIter,
+    pub device: Arc<VulkanDevice>,
+    pub queues: QueuesIter,
 }
 
 impl Device {
@@ -20,10 +20,15 @@ impl Device {
             .find(|&q| q.supports_graphics())
             .expect("couldn't find a Vulkan graphical queue family");
 
+        let device_ext = DeviceExtensions {
+            khr_swapchain: true,
+            ..DeviceExtensions::none()
+        };
+
         let (device, queues) = VulkanDevice::new(
             physical,
             &Features::none(),
-            &DeviceExtensions::none(),
+            &device_ext,
             [(queue_family, QUEUE_PRIO_DEFAULT)].iter().cloned(),
         )
         .expect("failed to create Vulkan device");

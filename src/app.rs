@@ -1,18 +1,19 @@
+use winit::event_loop::EventLoop;
+
 use crate::gfx::{Window, Vulkan};
 
 pub struct App {
     window: Window,
-    #[allow(dead_code)]
     vulkan: Vulkan,
 }
 
 impl App {
     pub fn new() -> Self {
-        let vulkan = Vulkan::new();
+        let event_loop = EventLoop::new();
 
         Self {
-            vulkan: Vulkan::new(),
-            window: Window::new(&vulkan),
+            vulkan: Vulkan::new(&event_loop),
+            window: Window::new(event_loop),
         }
     }
 

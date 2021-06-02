@@ -23,8 +23,6 @@ use crate::gfx::{events, Vulkan};
 pub struct Window {
     // Core
     event_loop: Option<EventLoop<()>>,
-    #[allow(dead_code)]
-    window: Arc<Surface<WinitWindow>>,
     // Callbacks
     on_update: Option<Box<dyn Fn(Duration, &Vec<Input>)>>,
     on_render: Option<Box<dyn Fn()>>,
@@ -36,24 +34,13 @@ pub struct Window {
 }
 
 impl Window {
-    pub fn new(vulkan: &Vulkan) -> Self {
+    pub fn new(event_loop: EventLoop<()>) -> Self {
         const INIT_WIDTH: u32 = 800;
         const INIT_HEIGHT: u32 = 600;
         const TITLE: &str = "Minecraft";
 
-        let event_loop = EventLoop::new();
-        let window = WindowBuilder::new()
-            .with_title(TITLE)
-            .with_inner_size(LogicalSize::new(
-                f64::from(INIT_WIDTH),
-                f64::from(INIT_HEIGHT),
-            ))
-            .build_vk_surface(&event_loop, vulkan.instance.clone())
-            .unwrap();
-
         Self {
             event_loop: Some(event_loop),
-            window,
             //
             on_update: None,
             on_render: None,
