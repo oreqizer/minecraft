@@ -20,6 +20,8 @@ use winit::{
 use crate::game::Input;
 use crate::gfx::{events, Vulkan};
 
+const TICK_DUR: Duration = Duration::from_millis(250);
+
 pub struct Window {
     // Core
     event_loop: Option<EventLoop<()>>,
@@ -84,8 +86,6 @@ impl Window {
                 }
                 // Lifecycle
                 Event::MainEventsCleared => {
-                    const TICK_DUR: Duration = Duration::from_millis(250);
-
                     self.exec_time += SystemTime::now().duration_since(self.curr_time).unwrap();
                     self.curr_time = SystemTime::now();
 
