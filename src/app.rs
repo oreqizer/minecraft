@@ -1,16 +1,16 @@
-mod events;
-mod window;
-
-use window::Window;
+use crate::gfx::{Window, Vulkan};
 
 pub struct App {
     window: Window,
+    #[allow(dead_code)]
+    vulkan: Vulkan,
 }
 
 impl App {
     pub fn new() -> Self {
         Self {
             window: Window::new(),
+            vulkan: Vulkan::new(),
         }
     }
 

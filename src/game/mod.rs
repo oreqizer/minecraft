@@ -1,3 +1,3 @@
-pub mod input;
+mod input;
 
 pub use input::Input;

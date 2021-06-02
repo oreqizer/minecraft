@@ -1,7 +1,8 @@
+mod app;
 mod game;
 mod gfx;
 
-use gfx::App;
+use app::App;
 
 fn main() {
     let app = App::new();
