@@ -6,5 +6,8 @@ pub mod vs {
 }
 
 pub mod fs {
-
+    vulkano_shaders::shader!{
+        ty: "fragment",
+        path: "src/shaders/block.frag.glsl",
+    }
 }
