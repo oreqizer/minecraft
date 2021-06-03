@@ -1,4 +1,4 @@
-mod events;
+pub mod events;
 mod window;
 mod vulkan;
 
