@@ -5,7 +5,6 @@ _hello world_ project with a reasonable scale.
 
 ## Progress
 
-Features:
 - [x] Window
 - [x] Input handling
 - [x] Triangle
