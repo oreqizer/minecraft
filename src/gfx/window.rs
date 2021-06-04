@@ -34,7 +34,7 @@ impl Window {
         self.input_buffer.push(input);
     }
 
-    pub fn cycle(&mut self, update: impl Fn(Duration, &Vec<Input>)) {
+    pub fn cycle(&mut self, update: impl Fn(Duration, &[Input])) {
         self.exec_time += SystemTime::now().duration_since(self.curr_time).unwrap();
         self.curr_time = SystemTime::now();
 
