@@ -12,7 +12,7 @@ use crate::gfx::vulkan::device::Device;
 use crate::gfx::vulkan::surface::Surface;
 
 pub struct Swapchain {
-    swapchain: Arc<VulkanSwapchain<Window>>,
+    pub(crate) swapchain: Arc<VulkanSwapchain<Window>>,
     images: Vec<Arc<SwapchainImage<Window>>>,
 }
 

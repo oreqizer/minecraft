@@ -2,6 +2,7 @@ mod app;
 mod game;
 mod gfx;
 mod shaders;
+mod world;
 
 use app::App;
 

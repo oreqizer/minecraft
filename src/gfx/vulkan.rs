@@ -5,6 +5,8 @@ mod swapchain;
 use std::sync::Arc;
 
 use vulkano::instance::{Instance, PhysicalDevice};
+use vulkano::device::Device as VulkanDevice;
+use vulkano::swapchain::Swapchain as VulkanSwapchain;
 use winit::{event_loop::EventLoop, window::Window};
 
 pub use device::Device;
@@ -35,5 +37,13 @@ impl Vulkan {
             device,
             swapchain,
         }
+    }
+
+    pub fn device(&mut self) -> &Arc<VulkanDevice> {
+        &self.device.device
+    }
+
+    pub fn swapchain(&mut self) -> &Arc<VulkanSwapchain<Window>> {
+        &self.swapchain.swapchain
     }
 }

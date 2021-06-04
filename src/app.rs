@@ -1,9 +1,13 @@
-use winit::event_loop::{EventLoop, ControlFlow};
-
-use crate::gfx::{events, Window, Vulkan};
 use std::time::{Duration, SystemTime};
-use crate::game::Input;
+
+use vulkano::buffer::{BufferUsage, CpuAccessibleBuffer};
 use winit::event::{Event, WindowEvent};
+use winit::event_loop::{ControlFlow, EventLoop};
+
+use crate::game::Input;
+use crate::gfx::{events, Vulkan, Window};
+use crate::shaders::block;
+use std::sync::Arc;
 
 pub struct App {
     vulkan: Vulkan,
@@ -66,7 +70,57 @@ impl App {
     }
 
     fn render(&mut self) {
-        // println!("render!! {}", count);
+        // TODO this is just a triangle for now for testing purposes
+        let vertex_buffer = {
+            #[derive(Default, Debug, Clone)]
+            struct Vertex {
+                position: [f32; 2],
+            }
+            vulkano::impl_vertex!(Vertex, position);
+
+            CpuAccessibleBuffer::from_iter(
+                self.vulkan.device().clone(),
+                BufferUsage::all(),
+                false,
+                [
+                    Vertex {
+                        position: [-0.5, -0.25],
+                    },
+                    Vertex {
+                        position: [0.0, 0.5],
+                    },
+                    Vertex {
+                        position: [0.25, -0.1],
+                    },
+                ]
+                .iter()
+                .cloned(),
+            )
+            .unwrap()
+        };
+
+        let vs = block::vs::Shader::load(self.vulkan.device().clone()).unwrap();
+        let fs = block::fs::Shader::load(self.vulkan.device().clone()).unwrap();
+
+        let render_pass = Arc::new(
+            vulkano::single_pass_renderpass!(
+                self.vulkan.device().clone(),
+                attachments: {
+                    // Color is a custom name
+                    color: {
+                        load: Clear,
+                        store: Store,
+                        format: self.vulkan.swapchain().format(),
+                        samples: 1,
+                    }
+                },
+                pass: {
+                    color: [color],
+                    depth_stencil: {}
+                }
+            )
+            .unwrap(),
+        );
     }
 
     // TODO resize
