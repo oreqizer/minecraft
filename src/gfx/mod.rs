@@ -1,6 +1,7 @@
 pub mod events;
-mod window;
+mod renderers;
 mod vulkan;
+mod window;
 
-pub use window::Window;
 pub use vulkan::Vulkan;
+pub use window::Window;
