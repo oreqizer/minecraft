@@ -1,17 +1,6 @@
-use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 
-use vulkano_win::VkSurfaceBuild;
-use vulkano::swapchain::Surface;
-use winit::{
-    dpi::LogicalSize,
-    event::{Event, WindowEvent},
-    event_loop::{ControlFlow, EventLoop},
-    window::{Window as WinitWindow, WindowBuilder},
-};
-
 use crate::game::Input;
-use crate::gfx::{events, Vulkan};
 
 const TICK_DUR: Duration = Duration::from_millis(250);
 

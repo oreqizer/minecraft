@@ -1,37 +1,104 @@
-use std::sync::Arc;
-use vulkano::device::{Device as VulkanDevice, DeviceExtensions, Features, QueuesIter, Queue};
-use vulkano::instance::{Instance, PhysicalDevice};
+use ash::extensions::khr::Swapchain;
+use ash::version::{DeviceV1_0, InstanceV1_0};
+use ash::{vk, Device as AshDevice};
 
-use crate::gfx::vulkan::Surface;
+use crate::gfx::vulkan::Instance;
 
 pub struct Device {
-    pub device: Arc<VulkanDevice>,
-    pub queue: Arc<Queue>,
+    physical_device: vk::PhysicalDevice,
+    device: AshDevice,
+    queue: vk::Queue,
 }
 
 impl Device {
-    pub fn new(physical: PhysicalDevice, surface: &Surface) -> Self {
-        let queue_family = physical
-            .queue_families()
-            .find(|&q| q.supports_graphics() && surface.surface.is_supported(q).unwrap_or(false))
-            .expect("couldn't find a Vulkan graphical queue family");
+    pub fn new(instance: &Instance) -> Self {
+        let surface = instance.surface();
+        let surface_loader = instance.surface_loader();
 
-        let device_ext = DeviceExtensions {
-            khr_swapchain: true,
-            ..DeviceExtensions::none()
-        };
+        unsafe {
+            let physical_devices = instance
+                .instance()
+                .enumerate_physical_devices()
+                .expect("failed to enumerate Vulkan physical devices");
 
-        let (device, mut queues) = VulkanDevice::new(
-            physical,
-            &Features::none(),
-            &device_ext,
-            [(queue_family, 0.5)].iter().cloned(),
-        )
-        .expect("failed to create Vulkan device");
+            let (physical_device, queue_family_index) = physical_devices
+                .iter()
+                .map(|pdevice| {
+                    instance
+                        .instance()
+                        .get_physical_device_queue_family_properties(*pdevice)
+                        .iter()
+                        .enumerate()
+                        .filter_map(|(index, ref info)| {
+                            let supports_graphics =
+                                info.queue_flags.contains(vk::QueueFlags::GRAPHICS);
+                            let supports_surface = surface_loader
+                                .get_physical_device_surface_support(
+                                    *pdevice,
+                                    index as u32,
+                                    surface,
+                                )
+                                .unwrap();
 
-        // Only a single queue for now
-        let queue = queues.next().unwrap();
+                            if supports_graphics && supports_surface {
+                                Some((*pdevice, index as u32))
+                            } else {
+                                None
+                            }
+                        })
+                        .next()
+                })
+                .flatten()
+                .next()
+                .expect("no suitable Vulkan physical device");
 
-        Self { device, queue }
+            let priorities = [1.0];
+            let queue_info = [vk::DeviceQueueCreateInfo::builder()
+                .queue_family_index(queue_family_index)
+                .queue_priorities(&priorities)
+                .build()];
+
+            let device_extension_names = [Swapchain::name().as_ptr()];
+            let features = vk::PhysicalDeviceFeatures {
+                shader_clip_distance: 1,
+                ..Default::default()
+            };
+
+            let device_create_info = vk::DeviceCreateInfo::builder()
+                .queue_create_infos(&queue_info)
+                .enabled_extension_names(&device_extension_names)
+                .enabled_features(&features);
+
+            let device = instance
+                .instance()
+                .create_device(physical_device, &device_create_info, None)
+                .unwrap();
+
+            let queue = device.get_device_queue(queue_family_index as u32, 0);
+
+            Self {
+                physical_device,
+                device,
+                queue,
+            }
+        }
+    }
+
+    pub fn destroy(&mut self) {
+        unsafe {
+            self.device.destroy_device(None);
+        }
+    }
+
+    pub fn physical_device(&self) -> vk::PhysicalDevice {
+        self.physical_device
+    }
+
+    pub fn device(&self) -> &AshDevice {
+        &self.device
+    }
+
+    pub fn queue(&self) -> &vk::Queue {
+        &self.queue
     }
 }
