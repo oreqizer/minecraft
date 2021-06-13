@@ -1,25 +1,119 @@
-use ash::extensions::khr::Swapchain as AshSwapchain;
-use ash::version::DeviceV1_0;
-use ash::vk;
-
-use crate::gfx::vulkan::device::Device;
-use crate::gfx::vulkan::instance::Instance;
+use ash::extensions::khr::{Surface, Swapchain as AshSwapchain};
+use ash::version::{DeviceV1_0};
+use ash::{vk, Device, Instance};
+use std::sync::Arc;
+use winit::dpi::PhysicalSize;
 
 pub struct Swapchain {
+    device: Arc<Device>,
+
     swapchain: vk::SwapchainKHR,
-    swapchain_loader: AshSwapchain,
+    swapchain_loader: Arc<AshSwapchain>,
 
     present_images: Vec<vk::Image>,
     present_image_views: Vec<vk::ImageView>,
 }
 
 impl Swapchain {
-    pub fn new(instance: &Instance, device: &Device) -> Self {
-        let surface = instance.surface();
-        let surface_loader = instance.surface_loader();
-        let window_size = instance.window_size();
+    pub fn builder() -> SwapchainBuilder {
+        Default::default()
+    }
 
-        let physical_device = device.physical_device();
+    pub fn device(&self) -> &Arc<Device> {
+        &self.device
+    }
+
+    pub fn swapchain(&self) -> vk::SwapchainKHR {
+        self.swapchain
+    }
+
+    pub fn swapchain_loader(&self) -> &Arc<AshSwapchain> {
+        &self.swapchain_loader
+    }
+
+    pub fn present_images(&self) -> &Vec<vk::Image> {
+        &self.present_images
+    }
+
+    pub fn present_image_views(&self) -> &Vec<vk::ImageView> {
+        &self.present_image_views
+    }
+}
+
+impl Drop for Swapchain {
+    fn drop(&mut self) {
+        unsafe {
+            // device.destroy_image_view(self.depth_image_view, None);
+            // device.destroy_image(self.depth_image, None);
+
+            for &image_view in self.present_image_views.iter() {
+                self.device.destroy_image_view(image_view, None);
+            }
+
+            self.swapchain_loader
+                .destroy_swapchain(self.swapchain, None);
+        }
+    }
+}
+
+pub struct SwapchainBuilder {
+    instance: Option<Arc<Instance>>,
+    surface: Option<vk::SurfaceKHR>,
+    surface_loader: Option<Arc<Surface>>,
+
+    physical_device: Option<vk::PhysicalDevice>,
+    device: Option<Arc<Device>>,
+}
+
+impl Default for SwapchainBuilder {
+    fn default() -> Self {
+        Self {
+            instance: None,
+            surface: None,
+            surface_loader: None,
+
+            physical_device: None,
+            device: None,
+        }
+    }
+}
+
+impl SwapchainBuilder {
+    pub fn instance(mut self, instance: Arc<Instance>) -> Self {
+        self.instance = Some(instance);
+        self
+    }
+
+    pub fn surface(mut self, surface: vk::SurfaceKHR) -> Self {
+        self.surface = Some(surface);
+        self
+    }
+
+    pub fn surface_loader(mut self, surface_loader: Arc<Surface>) -> Self {
+        self.surface_loader = Some(surface_loader);
+        self
+    }
+
+    pub fn physical_device(mut self, physical_device: vk::PhysicalDevice) -> Self {
+        self.physical_device = Some(physical_device);
+        self
+    }
+
+    pub fn device(mut self, device: Arc<Device>) -> Self {
+        self.device = Some(device);
+        self
+    }
+
+    pub fn build(&mut self, size: &PhysicalSize<u32>) -> Swapchain {
+        let instance = self.instance.take().unwrap();
+        let surface = self.surface.unwrap();
+        let surface_loader = self.surface_loader.take().unwrap();
+
+        let physical_device = self.physical_device.unwrap();
+        let device = self.device.take().unwrap();
+
+        let width = size.width;
+        let height = size.height;
 
         unsafe {
             let surface_format = surface_loader
@@ -40,10 +134,7 @@ impl Swapchain {
             };
 
             let surface_resolution = match surface_capabilities.current_extent.width {
-                u32::MAX => vk::Extent2D {
-                    width: window_size.width,
-                    height: window_size.height,
-                },
+                u32::MAX => vk::Extent2D { width, height },
                 _ => surface_capabilities.current_extent,
             };
 
@@ -66,7 +157,7 @@ impl Swapchain {
                 .find(|&mode| mode == vk::PresentModeKHR::MAILBOX)
                 .unwrap_or(vk::PresentModeKHR::FIFO);
 
-            let swapchain_loader = AshSwapchain::new(instance.instance(), device.device());
+            let swapchain_loader = AshSwapchain::new(&instance as &Instance, &device as &Device);
 
             let swapchain_create_info = vk::SwapchainCreateInfoKHR::builder()
                 .surface(surface)
@@ -107,35 +198,19 @@ impl Swapchain {
                             layer_count: 1,
                         })
                         .image(image);
-                    device
-                        .device()
-                        .create_image_view(&create_view_info, None)
-                        .unwrap()
+                    device.create_image_view(&create_view_info, None).unwrap()
                 })
                 .collect();
 
-            Self {
+            Swapchain {
+                device: device.clone(),
+
                 swapchain,
-                swapchain_loader,
+                swapchain_loader: Arc::new(swapchain_loader),
+
                 present_images,
                 present_image_views,
             }
-        }
-    }
-
-    pub fn destroy(&mut self, device: &Device) {
-        let device = device.device();
-
-        unsafe {
-            // device.destroy_image_view(self.depth_image_view, None);
-            // device.destroy_image(self.depth_image, None);
-
-            for &image_view in self.present_image_views.iter() {
-                device.destroy_image_view(image_view, None);
-            }
-
-            self.swapchain_loader
-                .destroy_swapchain(self.swapchain, None);
         }
     }
 }

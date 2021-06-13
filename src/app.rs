@@ -73,6 +73,6 @@ impl App {
     }
 
     fn render(&mut self) {
-        self.vulkan.prepare_render();
+        // self.vulkan.prepare_render();
     }
 }
